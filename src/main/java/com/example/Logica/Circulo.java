@@ -34,4 +34,9 @@ public class Circulo {
     public Color getColor(){
         return color;
     }
+
+    @Override
+    public String toString() {
+        return "Circulo";
+    }
 }

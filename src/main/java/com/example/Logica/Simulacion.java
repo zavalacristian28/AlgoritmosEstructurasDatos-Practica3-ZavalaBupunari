@@ -1,5 +1,8 @@
 package com.example.Logica;
 
+import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
+
 import java.util.ArrayList;
 
 public class Simulacion {
@@ -7,160 +10,182 @@ public class Simulacion {
     private Persona persona;
     private ArrayList<Persona> personas;
     private Dado dado;
+    private Pane panelDados;
 
-    public Simulacion() {
+    public Simulacion(Pane panelDados) {
         turnos = 0;
         personas = new ArrayList<>();
         dado = new Dado();
+        this.panelDados=panelDados;
     }
+
 
     public int getTurnos() {
         return turnos;
+    }
+    public void setTurnos(int turnos){
+        this.turnos=turnos;
     }
 
     public ArrayList<Persona> getPersonas() {
         return personas;
     }
 
-    public void crearPersonas(){
-        for(int x=0;x<10;x++){
-            Persona p=new Persona();
-            //esta condicion vacia la cola y cambia el valor de las fichas a 0 de la primer
-            //persona en la simulacion
-            if(x==9){
+    public void crearPersonas() {
+        int xInicial = 7;
+        int yInicial = 284;
+        int anchoPersona = 63;
+        int altoPersona = 93;
+        int n=10;
+
+        for (int x = 0; x < 10; x++) {
+            Persona p = new Persona();
+            Label labelPersona = new Label("P" + (x + 1));
+            labelPersona.setLayoutX(xInicial+n);
+            labelPersona.setLayoutY(yInicial);
+            p.setEtiquetaVisual(labelPersona);
+            panelDados.getChildren().add(labelPersona);
+
+            int xFinal = xInicial + anchoPersona;
+            int yFinal = yInicial + altoPersona;
+
+            p.setCoordenadaXinicial(xInicial);
+            p.setCoordenadaYinicial(yInicial);
+            p.setCoordenadaXfinal(xFinal);
+            p.setCoordenadaYfinal(yFinal);
+            n+=10;
+            xInicial += anchoPersona;
+
+            if (x == 9) {
                 p.setNumFichas(0);
-                int tamañoColaP0=p.getCola().tamaño();
-                for(int y=0;y<tamañoColaP0;y++){
+                int tamañoColaP0 = p.getCola().tamaño();
+                for (int y = 0; y < tamañoColaP0; y++) {
                     p.getCola().eliminarDato();
                 }
             }
+
             personas.add(p);
         }
     }
 
-    public void tirarDados(ArrayList<Persona> persona){
-        for(Persona p: persona){
-            int suma=0;
-            int indiceDado=0;
-            for(Dado d:p.getDadosJugador()){
-                p.getDadosJugador().get(indiceDado).tirarDado();
-                suma+=p.getDadosJugador().get(indiceDado).getValor();
-                indiceDado++;
+    public void tirarDados(ArrayList<Persona> persona) {
+        //System.out.println("\n========== TIRADA DE DADOS ==========");
+        for (Persona p : persona) {
+            int suma = 0;
+            int idPersona = personas.indexOf(p) + 1;
+
+            for (Dado d : p.getDadosJugador()) {
+                d.tirarDado();
+                suma += d.getValor();
             }
             p.setValorSumaDados(suma);
         }
-    }
-    //numero de personas desde el inicial hasta el ultimo que tiene dado
-    public int obtenerNDPDEIHEUQTD(ArrayList<Persona> personas){
-        int cont=0;
-        for(int x=0;x<personas.size();x++){
-            if(personas.get(x).comprobarSiHayDados()){
-                cont++;
-            }else{
-                break;
-            }
-        }
-        return cont;
+        System.out.println("=====================================\n");
     }
 
-    public void actualizarFichas(ArrayList<Persona> personas){
-        int suma=0;
-        for(int x=1;x<personas.size();x++){
-            if(x<9&& personas.get(x + 1).comprobarSiHayDados()){
-            suma=personas.get(x).getCola().tamaño()-personas.get(x+1).getValorSumaDados();
-            //Aqui le damos las fichas a la siguiente persona
+    public void actualizarFichas(ArrayList<Persona> personas) {
+        int totalPersonas = personas.size();
 
-                if(personas.get(x).getCola().tamaño()>personas.get(x+1).getValorSumaDados()) {
-                    for (int y = 0; y < suma; y++) {
-                        Circulo c = personas.get(x).getCola().eliminarDato();
-                        personas.get(x + 1).getCola().insertarDato(c);
-                    }
-                }else{
-                    //si el valor del dado es mayor al numero de fichas disponibles, se dan solo las que tiene
-                    for(int y=0;y<personas.get(x).getCola().tamaño();y++){
-                        Circulo c = personas.get(x).getCola().eliminarDato();
-                        personas.get(x + 1).getCola().insertarDato(c);
-                    }
-                }
-            }
-        }
-        suma=0;
-        //aqui insertamos los circulos de la persona anterior
-        for(int z=1;z<personas.size();z++) {
-            if (!personas.get(z).comprobarSiHayDados()) {
+        // Array para guardar cuántas fichas intentará entregar cada persona en este turno
+        int[] transferencias = new int[totalPersonas];
+
+        System.out.println("\n========================================================");
+        System.out.println("   COMPROBACIÓN DE TRANSFERENCIA DE FICHAS (TURNO)      ");
+        System.out.println("========================================================");
+
+        // ----------------------------------------------------
+        // PASO 1: CÁLCULO DE TRANSFERENCIAS SEGÚN CADA DADO
+        // ----------------------------------------------------
+        System.out.println("\n--- PASO 1: EVALUACIÓN DE DADOS Y FICHAS DISPONIBLES ---");
+
+        for (int i = 0; i < totalPersonas; i++) {
+            Persona personaActual = personas.get(i);
+            int numPersona = i + 1;
+
+            // Si la persona no tiene dados activos en este turno, no transfiere nada
+            if (!personaActual.comprobarSiHayDados()) {
+                transferencias[i] = 0;
+                System.out.println("  [BLOQUEO] Persona " + numPersona + " NO TIENE DADOS.");
                 continue;
+            }
+
+            // REGLA CLAVE: La capacidad de procesamiento depende del DADO DE ESTA PERSONA
+            int miDado = personaActual.getValorSumaDados();
+
+            if (i == 0) {
+                // PERSONA 1: Suministro ilimitado de materia prima.
+                // Produce y envía exactamente lo que indique SU dado.
+                transferencias[0] = miDado;
+                System.out.println("  * Persona 1 (Dado: " + miDado + ") -> Genera e introduce: "
+                        + transferencias[0] + " fichas al sistema.");
             } else {
-                suma = personas.get(z).getCola().tamaño() + personas.get(z).getValorSumaDados();
-                for (int a = 0; a < suma; a++) {
-                    Circulo k = personas.get(z - 1).getCola().eliminarDato();
-                    personas.get(z).getCola().insertarDato(k);
+                // PERSONAS 2 A N: Tienen una cola limitada.
+                // Entregan el MÍNIMO entre lo que tienen en mesa y lo que sacó SU dado.
+                int miMesa = personaActual.getCola().tamaño();
+                transferencias[i] = Math.min(miMesa, miDado);
+
+                if (i < totalPersonas - 1) {
+                    System.out.println("  * Persona " + numPersona + " (Mesa: " + miMesa + ", Dado: " + miDado
+                            + ") -> Entrega a Persona " + (numPersona + 1) + ": " + transferencias[i] + " fichas");
+                } else {
+                    // ÚLTIMA PERSONA: Lo que procesa sale directamente al cliente final (Throughput)
+                    System.out.println("  * Persona " + numPersona + " (Última) (Mesa: " + miMesa + ", Dado: " + miDado
+                            + ") -> Entrega al CLIENTE: " + transferencias[i] + " fichas");
                 }
             }
         }
+
+        // ----------------------------------------------------
+        // PASO 2: EJECUCIÓN DE LAS TRANSFERENCIAS (DE ATRÁS HACIA ADELANTE)
+        // ----------------------------------------------------
+        System.out.println("\n--- PASO 2: MOVIENDO FICHAS ENTRE COLAS ---");
+
+        // Recorremos de atrás hacia adelante para no alterar la cola antes de leerla
+        for (int i = totalPersonas - 1; i >= 0; i--) {
+            Persona entregador = personas.get(i);
+            int cantidadAMover = transferencias[i];
+
+            if (i == totalPersonas - 1) {
+                // La última persona retira las fichas procesadas de su cola (Salen del sistema)
+                for (int k = 0; k < cantidadAMover; k++) {
+                    if (entregador.getCola().tamaño() > 0) {
+                        entregador.getCola().eliminarDato();
+                    }
+                }
+                System.out.println("  + Cliente final recibió " + cantidadAMover + " fichas.");
+            } else {
+                // Pasamos las fichas de la persona actual (i) a la siguiente persona (i + 1)
+                Persona receptor = personas.get(i + 1);
+
+                if (i == 0) {
+                    // Persona 1 genera fichas nuevas y las pone en la mesa de la Persona 2
+                    for (int k = 0; k < cantidadAMover; k++) {
+                        receptor.getCola().insertarDato(new Circulo());
+                    }
+                    System.out.println("  + Persona 1 entregó " + cantidadAMover + " fichas a Persona 2.");
+                } else {
+                    // Jugadores 2 a N-1 mueven sus fichas físicas de su cola a la del receptor
+                    for (int k = 0; k < cantidadAMover; k++) {
+                        if (entregador.getCola().tamaño() > 0) {
+                            Circulo c = entregador.getCola().eliminarDato();
+                            receptor.getCola().insertarDato(c);
+                        }
+                    }
+                    System.out.println("  > Persona " + (i + 1) + " entregó " + cantidadAMover
+                            + " fichas a Persona " + (i + 2) + ".");
+                }
+            }
+        }
+
+        // ----------------------------------------------------
+        // PASO 3: RESUMEN DEL ESTADO DE LAS MESAS TRAS EL TURNO
+        // ----------------------------------------------------
+        System.out.println("\n--- RESUMEN DE CADA MESA AL FINALIZAR EL TURNO ---");
+        for (int p = 0; p < totalPersonas; p++) {
+            System.out.println("  Persona " + (p + 1) + ": " + personas.get(p).getCola().tamaño() + " fichas acumuladas");
+        }
+        System.out.println("========================================================\n");
     }
-
-    public void actualizarCola(ArrayList<Persona> personas) {
-        int num = personas.size();
-        int suma = 0;
-        int indice = 1;
-
-        // Guardar las fichas iniciales
-        int[] fichasIniciales = new int[num];
-        int[] fichasProcesadas = new int[num];
-        int[] fichasRecibidas = new int[num];
-
-        for (int x = 0; x < num; x++) {
-            fichasIniciales[x] = personas.get(x).getNumFichas();
-        }
-
-        // Calcular las fichas procesadas sin modificar las colas
-        // Persona 1 suministra fichas según el valor de sus dados
-        for (int x = 0; x < num; x++) {
-            if (x == 0) {
-                if (personas.get(x).comprobarSiHayDados()) {
-                    fichasProcesadas[x] =
-                            personas.get(x).getValorSumaDados();
-                }
-            } else if (x < num - 1 &&
-                    personas.get(x).comprobarSiHayDados()) {
-                fichasProcesadas[x] = Math.min(
-                        fichasIniciales[x],
-                        personas.get(x).getValorSumaDados()
-                );
-            }
-        }
-
-        // Determinar las fichas que recibe cada persona
-        for (int x = 0; x < num - 1; x++) {
-            if (x == 0) {
-                if (personas.get(x).comprobarSiHayDados()) {
-                    fichasRecibidas[x + 1] += fichasProcesadas[x];
-                }
-            } else if (personas.get(x).comprobarSiHayDados()) {
-                fichasRecibidas[x + 1] += fichasProcesadas[x];
-            }
-        }
-
-        // Actualizar las colas y el número de fichas
-        // La persona 1 es la fuente de suministro
-        for (int x = 1; x < num; x++) {
-            suma = fichasIniciales[x] - fichasProcesadas[x];
-
-            // Eliminar las fichas procesadas
-            for (int y = 0; y < fichasProcesadas[x]; y++) {
-                personas.get(x).getCola().eliminarDato();
-            }
-
-            // Agregar las fichas recibidas
-            for (int a = 0; a < fichasRecibidas[x]; a++) {
-                Circulo c = new Circulo();
-                personas.get(x).getCola().insertarDato(c);
-            }
-            suma += fichasRecibidas[x];
-            personas.get(x).setNumFichas(suma);
-        }
-    }
-
     public boolean moverDado(Persona origen, Persona destino, int indiceDado) {
 
         if (indiceDado < 0 || indiceDado >= origen.getDadosJugador().size()) {
@@ -173,13 +198,18 @@ public class Simulacion {
         return true;
     }
 
-    public void simulacion(){
-        crearPersonas();
-        while(turnos<20){
+    public boolean avanzarUnTurno() {
+        if (getTurnos() < 20) {
             tirarDados(personas);
-            actualizarCola(personas);
-            turnos++;
+            setTurnos(getTurnos()+1);
+           // turnos++;
+            return true;
         }
+        return false;
+    }
+
+    public boolean estaTerminada() {
+        return turnos >= 20;
     }
 
 }

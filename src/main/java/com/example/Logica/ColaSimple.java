@@ -2,12 +2,15 @@ package com.example.Logica;
 
 public class ColaSimple <T>{
     private T [] cola;
-    private int fin=-1;
-    private int inicio=-1;
-    private int max=-1;
+    private int fin;
+    private int inicio;
+    private int contador;
 
     public ColaSimple(){
-        cola=(T[])new Object [10];
+        cola=(T[])new Object [100];
+        contador=0;
+        inicio=-1;
+        fin=-1;
     }
 
     public ColaSimple(int capacidad){
@@ -27,18 +30,17 @@ public class ColaSimple <T>{
         }
         fin++;
         cola[fin] = dato;
+        contador++;
     }
 
     public T eliminarDato() {
-        // Verificamos si la cola está vacía
-        if (inicio == -1) {
+        if (contador == 0 || inicio == -1) {
             System.out.println("Subdesbordamiento");
             return null;
         }
 
         T dato = cola[inicio];
-
-        // Si era el último elemento de la cola
+        contador--;
         if (inicio == fin) {
             inicio = -1;
             fin = -1;
@@ -52,9 +54,21 @@ public class ColaSimple <T>{
     }
 
     public int tamaño() {
+        return contador;
+    }
+
+    public String mostrarCola() {
+        String cad="";
         if (inicio == -1) {
-            return 0;
+            System.out.println("La cola está vacía");
+            return cad;
         }
-        return fin - inicio + 1;
+
+        System.out.print("Contenido de la cola: ");
+
+        for (int i = inicio; i <= fin; i++) {
+            cad += String.valueOf(cola[i]) + " ";
+        }
+        return cad;
     }
 }

@@ -1,5 +1,7 @@
 package com.example.Logica;
 
+import javafx.scene.control.Label;
+
 import java.util.ArrayList;
 
 public class Persona {
@@ -14,6 +16,7 @@ public class Persona {
     private Dado dado;
     private ColaSimple<Circulo> cola;
     private ArrayList<Dado> dadosJugador;
+    private Label etiquetaVisual;
 
     public Persona(){
         numFichas=4;
@@ -55,6 +58,11 @@ public class Persona {
     public int getValorSuma(){return valorSuma;}
     public int getValorResta(){return valorResta;}
 
+
+    public void setCoordenadaXinicial(int coordenadaXinicial){this.coordenadaXinicial=coordenadaXinicial;}
+    public void setCoordenadaYinicial(int coordenadaYinicial){this.coordenadaYinicial=coordenadaYinicial;}
+    public void setCoordenadaXfinal(int coordenadaYfinal){this.coordenadaXfinal=coordenadaXfinal;}
+    public void setCoordenadaYfinal(int coordenadaYfinal){this.coordenadaYfinal=coordenadaYfinal;}
     public void setNumFichas(int numFichas){
         this.numFichas=numFichas;
     }
@@ -68,5 +76,12 @@ public class Persona {
     //si no hay dados, la persona anterior empezara la acumulacion
     public boolean comprobarSiHayDados(){
         return dadosJugador.size()>0;
+    }
+    public Label getEtiquetaVisual() {
+        return etiquetaVisual;
+    }
+
+    public void setEtiquetaVisual(Label etiquetaVisual) {
+        this.etiquetaVisual = etiquetaVisual;
     }
 }
