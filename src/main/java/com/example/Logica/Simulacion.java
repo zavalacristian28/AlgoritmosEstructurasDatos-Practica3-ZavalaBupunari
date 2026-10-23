@@ -1,8 +1,10 @@
 package com.example.Logica;
 
+import com.example.practica3_ayed.DadoGrafico;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 
+import java.security.CryptoPrimitive;
 import java.util.ArrayList;
 
 public class Simulacion {
@@ -11,20 +13,54 @@ public class Simulacion {
     private ArrayList<Persona> personas;
     private Dado dado;
     private Pane panelDados;
+    //para los valores de las graficas
+    private ArrayList<Integer> rendimiento;
+    private ArrayList<Integer> NumEnElSistema;
+    private int FtEESIniciales=36;
+    private ArrayList<Integer> tiempoEnSistema;
+    private ArrayList<ArrayList<Integer>> actividadPersonas;
+    private ArrayList<DadoGrafico> dadosGraficosActuales = new ArrayList<>();
+
+    public ArrayList<DadoGrafico> getDadosGraficosActuales() {
+        return dadosGraficosActuales;
+    }
+
+    public void setDadosGraficosActuales(ArrayList<DadoGrafico> dados) {
+        this.dadosGraficosActuales=dados;
+    }
 
     public Simulacion(Pane panelDados) {
         turnos = 0;
         personas = new ArrayList<>();
         dado = new Dado();
         this.panelDados=panelDados;
+        rendimiento=new ArrayList<>();
+        NumEnElSistema=new ArrayList<Integer>();
+        NumEnElSistema.add(FtEESIniciales);
+        tiempoEnSistema=new ArrayList<>();
+        actividadPersonas=new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            actividadPersonas.add(new ArrayList<>());
+        }
     }
 
-
+    public ArrayList<Integer> getRendimiento(){
+        return rendimiento;
+    }
+    public ArrayList<Integer> getNumEnElSistema(){
+        return NumEnElSistema;
+    }
+    public ArrayList<Integer> getTiempoEnSistema(){
+        return tiempoEnSistema;
+    }
     public int getTurnos() {
         return turnos;
     }
     public void setTurnos(int turnos){
         this.turnos=turnos;
+    }
+    public ArrayList<ArrayList<Integer>> getActividadPersonas(){
+        return actividadPersonas;
     }
 
     public ArrayList<Persona> getPersonas() {
@@ -58,8 +94,11 @@ public class Simulacion {
 
             if (x == 9) {
                 p.setNumFichas(0);
-                int tamañoColaP0 = p.getCola().tamaño();
+               /* int tamañoColaP0 = p.getCola().tamaño();
                 for (int y = 0; y < tamañoColaP0; y++) {
+                    p.getCola().eliminarDato();
+                }*/
+                while (p.getCola().tamaño() > 0) {
                     p.getCola().eliminarDato();
                 }
             }
@@ -69,122 +108,81 @@ public class Simulacion {
     }
 
     public void tirarDados(ArrayList<Persona> persona) {
-        //System.out.println("\n========== TIRADA DE DADOS ==========");
         for (Persona p : persona) {
             int suma = 0;
             int idPersona = personas.indexOf(p) + 1;
-
             for (Dado d : p.getDadosJugador()) {
                 d.tirarDado();
                 suma += d.getValor();
             }
             p.setValorSumaDados(suma);
         }
-        System.out.println("=====================================\n");
     }
 
     public void actualizarFichas(ArrayList<Persona> personas) {
         int totalPersonas = personas.size();
 
-        // Array para guardar cuántas fichas intentará entregar cada persona en este turno
         int[] transferencias = new int[totalPersonas];
-
-        System.out.println("\n========================================================");
-        System.out.println("   COMPROBACIÓN DE TRANSFERENCIA DE FICHAS (TURNO)      ");
-        System.out.println("========================================================");
-
-        // ----------------------------------------------------
-        // PASO 1: CÁLCULO DE TRANSFERENCIAS SEGÚN CADA DADO
-        // ----------------------------------------------------
-        System.out.println("\n--- PASO 1: EVALUACIÓN DE DADOS Y FICHAS DISPONIBLES ---");
 
         for (int i = 0; i < totalPersonas; i++) {
             Persona personaActual = personas.get(i);
-            int numPersona = i + 1;
-
-            // Si la persona no tiene dados activos en este turno, no transfiere nada
             if (!personaActual.comprobarSiHayDados()) {
                 transferencias[i] = 0;
-                System.out.println("  [BLOQUEO] Persona " + numPersona + " NO TIENE DADOS.");
                 continue;
             }
-
-            // REGLA CLAVE: La capacidad de procesamiento depende del DADO DE ESTA PERSONA
-            int miDado = personaActual.getValorSumaDados();
+            int sumaDadoPActual= personaActual.getValorSumaDados();
 
             if (i == 0) {
-                // PERSONA 1: Suministro ilimitado de materia prima.
-                // Produce y envía exactamente lo que indique SU dado.
-                transferencias[0] = miDado;
-                System.out.println("  * Persona 1 (Dado: " + miDado + ") -> Genera e introduce: "
-                        + transferencias[0] + " fichas al sistema.");
+                transferencias[0] = sumaDadoPActual;
             } else {
-                // PERSONAS 2 A N: Tienen una cola limitada.
-                // Entregan el MÍNIMO entre lo que tienen en mesa y lo que sacó SU dado.
-                int miMesa = personaActual.getCola().tamaño();
-                transferencias[i] = Math.min(miMesa, miDado);
-
-                if (i < totalPersonas - 1) {
-                    System.out.println("  * Persona " + numPersona + " (Mesa: " + miMesa + ", Dado: " + miDado
-                            + ") -> Entrega a Persona " + (numPersona + 1) + ": " + transferencias[i] + " fichas");
-                } else {
-                    // ÚLTIMA PERSONA: Lo que procesa sale directamente al cliente final (Throughput)
-                    System.out.println("  * Persona " + numPersona + " (Última) (Mesa: " + miMesa + ", Dado: " + miDado
-                            + ") -> Entrega al CLIENTE: " + transferencias[i] + " fichas");
-                }
+                int tamanoColaPActual= personaActual.getCola().tamaño();
+                transferencias[i] = Math.min(tamanoColaPActual, sumaDadoPActual);
             }
+            actividadPersonas.get(i).add(transferencias[i]);
         }
-
-        // ----------------------------------------------------
-        // PASO 2: EJECUCIÓN DE LAS TRANSFERENCIAS (DE ATRÁS HACIA ADELANTE)
-        // ----------------------------------------------------
-        System.out.println("\n--- PASO 2: MOVIENDO FICHAS ENTRE COLAS ---");
-
-        // Recorremos de atrás hacia adelante para no alterar la cola antes de leerla
         for (int i = totalPersonas - 1; i >= 0; i--) {
             Persona entregador = personas.get(i);
             int cantidadAMover = transferencias[i];
-
             if (i == totalPersonas - 1) {
-                // La última persona retira las fichas procesadas de su cola (Salen del sistema)
+                int sumaTiemposTurno = 0;
+                int fichasAtendidas = 0;
                 for (int k = 0; k < cantidadAMover; k++) {
                     if (entregador.getCola().tamaño() > 0) {
-                        entregador.getCola().eliminarDato();
+                        Circulo ficha = entregador.getCola().eliminarDato();
+                        if (!ficha.esInicial()) {
+                            int tSistema = turnos - ficha.getTiempoEntrada();
+                            tiempoEnSistema.add(tSistema);
+
+                        }
                     }
                 }
-                System.out.println("  + Cliente final recibió " + cantidadAMover + " fichas.");
+                rendimiento.add(cantidadAMover);
             } else {
-                // Pasamos las fichas de la persona actual (i) a la siguiente persona (i + 1)
                 Persona receptor = personas.get(i + 1);
 
                 if (i == 0) {
-                    // Persona 1 genera fichas nuevas y las pone en la mesa de la Persona 2
                     for (int k = 0; k < cantidadAMover; k++) {
-                        receptor.getCola().insertarDato(new Circulo());
+                        Circulo ficha=new Circulo();
+                        ficha.setInicial(false);
+                        ficha.setTiempoEntrada(turnos);
+                        receptor.getCola().insertarDato(ficha);
                     }
-                    System.out.println("  + Persona 1 entregó " + cantidadAMover + " fichas a Persona 2.");
                 } else {
-                    // Jugadores 2 a N-1 mueven sus fichas físicas de su cola a la del receptor
                     for (int k = 0; k < cantidadAMover; k++) {
                         if (entregador.getCola().tamaño() > 0) {
                             Circulo c = entregador.getCola().eliminarDato();
                             receptor.getCola().insertarDato(c);
                         }
                     }
-                    System.out.println("  > Persona " + (i + 1) + " entregó " + cantidadAMover
-                            + " fichas a Persona " + (i + 2) + ".");
                 }
             }
         }
-
-        // ----------------------------------------------------
-        // PASO 3: RESUMEN DEL ESTADO DE LAS MESAS TRAS EL TURNO
-        // ----------------------------------------------------
-        System.out.println("\n--- RESUMEN DE CADA MESA AL FINALIZAR EL TURNO ---");
-        for (int p = 0; p < totalPersonas; p++) {
-            System.out.println("  Persona " + (p + 1) + ": " + personas.get(p).getCola().tamaño() + " fichas acumuladas");
+         FtEESIniciales = 0;
+        for (Persona persona : personas) {
+            FtEESIniciales += persona.getCola().tamaño();
         }
-        System.out.println("========================================================\n");
+        NumEnElSistema.add(FtEESIniciales);
+
     }
     public boolean moverDado(Persona origen, Persona destino, int indiceDado) {
 
@@ -200,9 +198,8 @@ public class Simulacion {
 
     public boolean avanzarUnTurno() {
         if (getTurnos() < 20) {
-            tirarDados(personas);
             setTurnos(getTurnos()+1);
-           // turnos++;
+            tirarDados(personas);
             return true;
         }
         return false;
@@ -211,5 +208,4 @@ public class Simulacion {
     public boolean estaTerminada() {
         return turnos >= 20;
     }
-
 }

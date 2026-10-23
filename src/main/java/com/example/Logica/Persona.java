@@ -27,6 +27,8 @@ public class Persona {
         //Guardamos en la cola los primeros 4 circulos
         for(int x=0;x<numFichas;x++){
             Circulo circulo=new Circulo();
+            circulo.setTiempoEntrada(0);
+            circulo.setInicial(true);
             cola.insertarDato(circulo);
         }
     }

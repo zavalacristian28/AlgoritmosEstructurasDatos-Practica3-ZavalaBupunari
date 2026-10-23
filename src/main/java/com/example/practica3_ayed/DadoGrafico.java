@@ -27,6 +27,7 @@ public class DadoGrafico extends StackPane {
     private ArrayList<Persona> personas;
     private Persona personaDado;
     private Pane panelFondo;
+    private ArrayList<DadoGrafico> Dadosgraficos = new ArrayList<>();
 
     public DadoGrafico(Dado dadoModelo, ArrayList<Persona> personas, Simulacion sim, Pane panelFondo) {
         this.dadoModelo = dadoModelo;
@@ -48,6 +49,7 @@ public class DadoGrafico extends StackPane {
         this.getChildren().addAll(marco, capaPuntos);
         actualizarImagen();
         eventosDado();
+        //Dadosgraficos=dibujarDados(personas,sim,panelFondo);
     }
 
     public void actualizarImagen() {
@@ -121,6 +123,9 @@ public class DadoGrafico extends StackPane {
                 panelFondo.getChildren().add(dg);
             }
         }
+        if (sim != null) {
+            sim.setDadosGraficosActuales(graficos);
+        }
         return graficos;
     }
 
@@ -146,6 +151,7 @@ public class DadoGrafico extends StackPane {
 
             event.consume();
         });
+
         this.setOnMouseReleased(e -> {
             Persona personaEncontrada = encontrarPersona(personas);
 
@@ -159,11 +165,13 @@ public class DadoGrafico extends StackPane {
                     boolean movido = sim.moverDado(personaAnterior, personaEncontrada, indiceDado);
 
                     if (movido) {
-                        // Limpiamos solo los dados gráficos existentes en el panel
                         panelFondo.getChildren().removeIf(node -> node instanceof DadoGrafico);
 
-                        // Volvemos a dibujar todos los dados en sus nuevas posiciones
-                        dibujarDados(personas, sim, panelFondo);
+                        ArrayList<DadoGrafico> nuevos = dibujarDados(personas, sim, panelFondo);
+
+                        for (DadoGrafico dg : nuevos) {
+                            dg.actualizarImagen();
+                        }
                     } else {
                         this.regresarAPosicionInicial();
                     }
@@ -205,4 +213,5 @@ public class DadoGrafico extends StackPane {
     public void setPersonaDado(Persona personaDado){
         this.personaDado=personaDado;
     }
+
 }

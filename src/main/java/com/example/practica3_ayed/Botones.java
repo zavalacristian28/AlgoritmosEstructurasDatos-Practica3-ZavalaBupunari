@@ -2,6 +2,7 @@ package com.example.practica3_ayed;
 
 import com.example.Logica.Persona;
 import com.example.Logica.Simulacion;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
@@ -16,6 +17,10 @@ public class Botones {
     private ArrayList<DadoGrafico> dadosGraficos = new ArrayList<>();
     private ArrayList<Pane> panelesPersonas = new ArrayList<>();
     private int habilitador=0;
+    private int turno=0;
+    private Button botonTirar;
+    private Button botonMover;
+    private Label textoTurnos;
 
 
     public Botones(Pane panel,Pane panelFondo,Simulacion sim,CirculosGraficos cg,ArrayList<Pane> panelesPersonas){
@@ -61,72 +66,95 @@ public class Botones {
     }//fin del metodo
 
     public void textoTurnos(Pane panel){
-        Label textoTurnos=new Label();
+         textoTurnos=new Label();
         textoTurnos.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;"+"-fx-text-fill: white;");
-        textoTurnos.setText("Turno: "+sim.getTurnos());
+        textoTurnos.setText("Turno: "+turno);
         textoTurnos.setLayoutY(300);
         textoTurnos.setLayoutX(25);
         panel.getChildren().add(textoTurnos);
     }
 
     public void botonTirar(Pane panel){
-        Button botonTirar = crearBoton("Tirar", 25, 503, panel);
+         botonTirar = crearBoton("Tirar", 25, 503, panel);
         int cd=0;
+        botonTirar.setDisable(false);
         botonTirar.setOnAction(e -> {
+            if(habilitador==0) {
 
-            sim.tirarDados(sim.getPersonas());
-            sim.actualizarFichas(sim.getPersonas());
-
-            for (DadoGrafico dg : dadosGraficos) {
-                dg.actualizarImagen();
+                sim.tirarDados(sim.getPersonas());
+                sim.actualizarFichas(sim.getPersonas());
+                for (DadoGrafico dg : sim.getDadosGraficosActuales()) {
+                    dg.actualizarImagen();
+                }
+                botonTirar.setDisable(true);
+                botonMover.setDisable(false);
+                habilitador=1;
             }
-            habilitador++;
         });
-        if(habilitador==1){
-            botonTirar.setDisable(true);
-        }else{
-            botonTirar.setDisable(false);
-        }
+
         panel.getChildren().add(botonTirar);
     }
 
     public void botonMover(Pane panel){
-        Button botonMover=crearBoton("Mover", 25,570,panel);
+         botonMover=crearBoton("Mover", 25,570,panel);
+        botonMover.setDisable(true);
         botonMover.setOnAction(e ->{
-           if(!sim.estaTerminada()){
+           if(habilitador==1 && turno<=20){
                sim.avanzarUnTurno();
                cg.dibujarCirculos();
+               turno++;
+
+               if (turno == 21) {
+                   botonTirar.setDisable(true);
+                   botonMover.setDisable(true);
+                   textoTurnos.setText("Turno: " + 20);
+               } else {
+                   habilitador = 0;
+                   botonMover.setDisable(true);
+                   botonTirar.setDisable(false);
+                   textoTurnos.setText("Turno: " + turno);
+               }
            }
-           habilitador=0;
+
         });
-        if(habilitador==0){
-            botonMover.setDisable(true);
-        }else{
-            botonMover.setDisable(false);
-        }
+
         panel.getChildren().add(botonMover);
     }
 
     public void botonActividad(Pane panel){
         Button botonActividad=crearBoton("Actividad",25,50,panel);
-
         panel.getChildren().add(botonActividad);
+        botonActividad.setOnAction(event ->{
+            Graficas g=new Graficas(sim);
+            g.graficaActividad();
+        });
     }
 
     public void botonRendimiento(Pane panel) {
      Button botonRendimiento = crearBoton("Rendimiento", 25, 110, panel);
      panel.getChildren().add(botonRendimiento);
+        botonRendimiento.setOnAction(event -> {
+            Graficas graficas = new Graficas(sim);
+            graficas.graficaRendimiento();
+        });
     }
 
     public void botonNumSistema(Pane panel){
         Button botonNumS=crearBoton("Num/Sist",25,170,panel);
         panel.getChildren().add(botonNumS);
+        botonNumS.setOnAction(event ->{
+            Graficas g=new Graficas(sim);
+            g.graficaNSistema();
+        });
     }
 
     public void botonTiempoSistema(Pane panel){
         Button botonTSis=crearBoton("Tiempo/Sis",25,230,panel);
         panel.getChildren().add(botonTSis);
+
+        botonTSis.setOnAction(event ->{
+           Graficas g=new Graficas(sim);
+           g.graficaTSistema();
+        });
     }
-
-
 }

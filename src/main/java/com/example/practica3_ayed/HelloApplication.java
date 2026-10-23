@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class HelloApplication extends Application {
-
+    ArrayList<DadoGrafico> listaGlobalDeDadosGraficos;
     @Override
     public void start(Stage stage) throws IOException {
         Fondo fondo = new Fondo();
@@ -20,13 +20,13 @@ public class HelloApplication extends Application {
         simulacion.crearPersonas();
         ArrayList<Persona> personas=simulacion.getPersonas();
 
-        //DadoGrafico.dibujarDados(simulacion.getPersonas(),fondo.getPanelDados());
         Scene scene = new Scene(fondo.getPanel(), 935, 664);
-        CirculosGraficos graficos = new CirculosGraficos(personas,fondo.getPanelDados());
+        CirculosGraficos graficos = new CirculosGraficos(personas,fondo.getPanelDados(),simulacion);
         graficos.crearPaneles(fondo.getPanel());
         graficos.dibujarCirculos();
         Botones boton=new Botones(fondo.getBotones(),fondo.getPanelDados(),simulacion,graficos,fondo.getPanelesDados());
         boton.textoTurnos(fondo.getBotones());
+        Graficas graficas=new Graficas(simulacion);
 
         stage.setTitle("Hello!");
         stage.setScene(scene);

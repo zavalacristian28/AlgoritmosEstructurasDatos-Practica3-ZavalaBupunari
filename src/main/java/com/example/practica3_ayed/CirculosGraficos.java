@@ -1,5 +1,7 @@
 package com.example.practica3_ayed;
 
+import com.example.Logica.Circulo;
+import com.example.Logica.ColaSimple;
 import com.example.Logica.Persona;
 import com.example.Logica.Simulacion;
 import javafx.scene.layout.Pane;
@@ -8,14 +10,26 @@ import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 
+
 public class CirculosGraficos {
     private Simulacion simulacion;
     private ArrayList<Persona> personas;
     private ArrayList<Pane> panelesPersonas = new ArrayList<>();
+    private int cont=0;
+    private boolean inicial;
 
-    public CirculosGraficos(ArrayList<Persona> personas,Pane panelDados) {
+
+    public boolean esInicial() {
+        return inicial;
+    }
+
+    public void setInicial(boolean inicial) {
+        this.inicial = inicial;
+    }
+
+    public CirculosGraficos(ArrayList<Persona> personas,Pane panelDados,Simulacion simulacion) {
         this.personas = personas;
-        simulacion=new Simulacion(panelDados);
+        this.simulacion=simulacion;
     }
 
     public void dibujarCirculos(){
@@ -24,10 +38,14 @@ public class CirculosGraficos {
             Pane panelPersona = panelesPersonas.get(i);
             panelPersona.getChildren().clear();
             int cantidad = persona.getCola().tamaño();
+
             int maximaCantCirculos=Math.min(cantidad,75);
-            //System.out.println("Persona " + i + " tiene en cola: " + cantidad);
+
             for (int j = 0; j < maximaCantCirculos; j++) {
+
                 Circle circulo = dibujarCirculo();
+
+                    circulo.setFill(Color.GRAY);
                 int bloque = j / 25;
                 int indiceEnBloque = j % 25;
                 int columna = indiceEnBloque % 5;
@@ -38,13 +56,44 @@ public class CirculosGraficos {
                 circulo.setCenterY(y);
                 panelPersona.getChildren().add(circulo);
             }
+            if (i == personas.size() - 1) {
+
+                int cantidadCirculosSalida = 0;
+
+                for (int cantidadTurno : simulacion.getRendimiento()) {
+                    cantidadCirculosSalida += cantidadTurno;
+                }
+
+                double inicioY = 80 + (Math.min(cantidad, 75) / 25) * 96 + 20;
+
+                for (int j = 0; j < cantidadCirculosSalida; j++) {
+
+                    Circle circulo = dibujarCirculo();
+
+
+                    int columna = j % 5;
+                    int fila = j / 5;
+
+                    double x = 10 + columna * 14;
+                    double y = inicioY + fila * 14;
+
+                    circulo.setCenterX(x);
+                    circulo.setCenterY(y);
+
+                    panelPersona.getChildren().add(circulo);
+                }
+            }
         }
+        cont++;
     }
 
+
+
     public Circle dibujarCirculo() {
-        Circle circulo = new Circle();
-        circulo.setRadius(5);
-        circulo.setFill(Color.GRAY);
+        Circle circulo=new Circle();
+                 circulo=new Circle();
+                circulo.setRadius(5);
+                circulo.setFill(Color.GRAY);
         return circulo;
     }
 
@@ -66,14 +115,15 @@ public class CirculosGraficos {
             }
             panelPersona.setLayoutX((inicioX + i * 80)-r);
             panelPersona.setLayoutY(inicioY);
+
             panelFondo.getChildren().add(panelPersona);
             panelesPersonas.add(panelPersona);
             r+=5;
         }
+
     }
 
     public ArrayList<Pane> getPanelesPersonas(){
         return panelesPersonas;
     }
-
 }

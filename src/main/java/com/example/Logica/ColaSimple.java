@@ -60,7 +60,7 @@ public class ColaSimple <T>{
     public String mostrarCola() {
         String cad="";
         if (inicio == -1) {
-            System.out.println("La cola está vacía");
+            System.out.println("La cola está vacia");
             return cad;
         }
 
@@ -70,5 +70,17 @@ public class ColaSimple <T>{
             cad += String.valueOf(cola[i]) + " ";
         }
         return cad;
+    }
+
+    public T obtener(int indice) {
+        // Validar que el índice esté dentro del rango actual de elementos
+        if (indice < 0 || indice >= contador) {
+            System.out.println("Índice fuera de rango");
+            return null;
+        }
+
+        // Como en tu clase los elementos se desplazan y siempre empiezan en 'inicio',
+        // el elemento en la posición logica 'indice' está en 'inicio + indice'
+        return cola[inicio + indice];
     }
 }

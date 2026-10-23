@@ -7,7 +7,16 @@ public class Circulo {
     private int posX;
     private int posY;
     private Color color;
+    private int tiempoEntrada;
+    private boolean inicial;
 
+    public boolean esInicial() {
+        return inicial;
+    }
+
+    public void setInicial(boolean inicial) {
+        this.inicial = inicial;
+    }
     public Circulo(){
         radio=1;
         posY=1;
@@ -29,6 +38,11 @@ public class Circulo {
     }
     public int getPosY(){
         return posY;
+    }
+    public int getTiempoEntrada(){return tiempoEntrada;}
+
+    public void setTiempoEntrada(int tiempoEntrada){
+        this.tiempoEntrada=tiempoEntrada;
     }
 
     public Color getColor(){
